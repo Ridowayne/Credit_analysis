@@ -37,48 +37,46 @@ class BuyerAnalysisAPIView(APIView):
     
     # Create a new Buyer details to be analysed
     def post(self, request, *args, **kwargs):
+        # Handling the uploaded bank statement PDF file
+        statement = request.FILES.get('bank_statement')
 
-        statement = request.data.get('bank_statement')
-        tables = camelot.read_pdf(statement)
-        # Print the number of tables found
+        if not statement:
+            return Response({"errors": "Bank statement field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        print(f"Total tables found: {tables.n}")
-        print(tables[0].df)
-        first_table = tables[0].df
-        second_table = tables[1].df
-        # analysis with pandas can start from here
+        # Save the uploaded file temporarily to process with Camelot
+        temp_file_path = '/tmp/' + statement.name
+        with open(temp_file_path, 'wb+') as temp_file:
+            for chunk in statement.chunks():
+                temp_file.write(chunk)
 
+        try:
+            # Camelot processing on the temporary file
+            tables = camelot.read_pdf(temp_file_path)
+            print(f"Total tables found: {tables.n}")
+            first_table = tables[0].df
+            second_table = tables[1].df
+            print(first_table, second_table)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Proceed with the rest of the data extraction and processing
         data = {
             'name': request.data.get('name'),
             'completed': request.data.get('completed'),
-            'bank_statement': request.data.get('bank_statement'),
+            'bank_statement': temp_file_path,  # will probbly upload it or something for reference purpose
             'bank_name': request.data.get('bank_name'),
             'user': request.user.id
         }
-        errors = {}
-        if not data['name']:
-            errors['name'] = "Name field is required."
 
-        if not data['bank_statement']:  
-            errors['bank_statement'] = "Bank statement field is required."
-        
-        if not data['bank_name']:
-            errors['bank_name'] = "Bank name field is required."
-
-        if errors:
-            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = BuyerAnalysisSerializer(data = data)
+        serializer = BuyerAnalysisSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-
-            custom_data = {
-                'data': serializer.data,
-                'message': 'Prospective buyer details submitted successfully'
-            }
-            return Response(custom_data, status = status.HTTP_201_CREATED)
+            return Response({"data": serializer.data, "message": "Prospective buyer details submitted successfully"}, status=status.HTTP_201_CREATED)
         
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+        
 
 
 
