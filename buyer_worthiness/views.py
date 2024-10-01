@@ -7,9 +7,12 @@ from rest_framework import permissions
 from .models import Buyer_Analysis
 from .serializers import BuyerAnalysisSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import UserCreateSerializer
 
-def dummy_view(request):
-    return HttpResponse("This is a test view.")
+class LoginView(TokenObtainPairView):
+   
+    pass
 
 class BuyerAnalysisAPIView(APIView):
      
@@ -123,3 +126,13 @@ class BuyerAnalysisDetailsAPIView(APIView):
         
         buyer_record_instance.delete()
         return Response({"res": "Object deleted!"}, status=status.HTTP_200_OK)
+    
+
+class SignupView(APIView):
+    
+    def post(self, request, *args, **kwargs):
+        serializer = UserCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
