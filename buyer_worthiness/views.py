@@ -9,6 +9,7 @@ from .serializers import BuyerAnalysisSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserCreateSerializer
+import camelot
 
 class LoginView(TokenObtainPairView):
    
@@ -37,9 +38,21 @@ class BuyerAnalysisAPIView(APIView):
     # Create a new Buyer details to be analysed
     def post(self, request, *args, **kwargs):
 
+        statement = request.data.get('bank_statement')
+        tables = camelot.read_pdf(statement)
+        # Print the number of tables found
+
+        print(f"Total tables found: {tables.n}")
+        print(tables[0].df)
+        first_table = tables[0].df
+        second_table = tables[1].df
+        # analysis with pandas can start from here
+
         data = {
             'name': request.data.get('name'),
             'completed': request.data.get('completed'),
+            'bank_statement': request.data.get('bank_statement'),
+            'bank_name': request.data.get('bank_name'),
             'user': request.user.id
         }
         errors = {}
