@@ -18,6 +18,8 @@ class Buyer_Analysis(models.Model):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     bank_name = models.CharField(max_length=20, blank=True, null=True)
     bank_statement = models.CharField(max_length=255, blank=True, null=True)
+    product_name = models.CharField(max_length=255, blank=True)
+    monthly_payment = models.IntegerField(default=0, null=False)
 
     def __str__(self):
         return self.name

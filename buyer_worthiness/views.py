@@ -81,7 +81,7 @@ class BuyerAnalysisAPIView(APIView):
                 'average_amount': average_amount,
                 'num_transactions': num_transactions
             }
-            # decision willl nw be made wether this passes the test or not and if the user is worthy
+            # decision will nw be made wether this buyer passes the test or not and if the user is capable of what he wants to buy
         
            
 
