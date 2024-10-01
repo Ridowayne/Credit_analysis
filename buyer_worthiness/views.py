@@ -10,6 +10,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserCreateSerializer
 import camelot
+import pandas as pd
 
 class LoginView(TokenObtainPairView):
    
@@ -57,8 +58,36 @@ class BuyerAnalysisAPIView(APIView):
             second_table = tables[1].df
             print(first_table, second_table)
 
+            # begin analysis with pandas
+            df = pd.DataFrame(second_table)
+
+            # prints out few lines from the table
+            print(df.head())
+
+            # Example analysis: assuming columns 0, 1 are Date and Amount
+            df.columns = ['Date', 'Description', 'Amount']  # Adjust based on actual table structure
+            df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')  # Convert Amount column to numeric
+            
+            # Drop any rows where Amount is NaN
+            df_cleaned = df.dropna(subset=['Amount'])
+            
+            # Calculate some basic statistics
+            total_amount = df_cleaned['Amount'].sum()
+            average_amount = df_cleaned['Amount'].mean()
+            num_transactions = df_cleaned.shape[0]
+
+            analysis_results = {
+                'total_amount': total_amount,
+                'average_amount': average_amount,
+                'num_transactions': num_transactions
+            }
+            # decision willl nw be made wether this passes the test or not and if the user is worthy
+        
+           
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+             
 
         # Proceed with the rest of the data extraction and processing
         data = {
